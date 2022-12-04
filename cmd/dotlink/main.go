@@ -158,7 +158,7 @@ func Apply(root, target, ignores, state string) error {
 	return nil
 }
 
-func Destroy(_, _, _, state string) error {
+func Destroy(root, target, ignores, state string) error {
 	f, err := os.Open(state)
 	if err != nil {
 		return fmt.Errorf("os.Open: %w", err)
@@ -175,6 +175,10 @@ func Destroy(_, _, _, state string) error {
 
 	if err := dotlink.Destroy(states); err != nil {
 		return fmt.Errorf("dotlink.Destroy: %w", err)
+	}
+
+	if err := Import(root, target, ignores, state); err != nil {
+		return fmt.Errorf("Import: %w", err)
 	}
 
 	return nil

@@ -34,7 +34,7 @@ func (s State) Less(o State) bool {
 }
 
 func (s State) Destroy() error {
-	if err := os.Remove(s.To); err != nil {
+	if err := os.RemoveAll(s.To); err != nil {
 		return fmt.Errorf("os.Remove: %w", err)
 	}
 	return nil
