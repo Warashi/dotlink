@@ -3,22 +3,9 @@ package dotlink
 import (
 	"fmt"
 	"io/fs"
-	"os"
 	"path/filepath"
 	"strings"
 )
-
-func exists(fn string) (bool, error) {
-	if _, err := os.Stat(fn); err != nil {
-		if os.IsNotExist(err) {
-			return false, nil
-		}
-
-		return false, fmt.Errorf("os.Stat: %w", err)
-	}
-
-	return true, nil
-}
 
 func NewStates(root, target string, ignores PathMatcher) (States, error) {
 	root, err := filepath.Abs(root)
@@ -34,12 +21,7 @@ func NewStates(root, target string, ignores PathMatcher) (States, error) {
 
 		target := strings.Replace(path, root, target, 1)
 
-		exists, err := exists(target)
-		if err != nil {
-			return fmt.Errorf("exists: %w", err)
-		}
-
-		if !exists || ignores.MatchesPath(strings.TrimPrefix(path, root)) {
+		if ignores.MatchesPath(strings.TrimPrefix(path, root)) {
 			return nil
 		}
 
