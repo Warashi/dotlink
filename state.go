@@ -31,7 +31,13 @@ func (s State) Less(o State) bool {
 
 	// 全く同じならとりあえず true を返す
 	return true
+}
 
+func (s State) Destroy() error {
+	if err := os.Remove(s.To); err != nil {
+		return fmt.Errorf("os.Remove: %w", err)
+	}
+	return nil
 }
 
 func (s States) Len() int           { return len(s) }

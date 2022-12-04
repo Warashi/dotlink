@@ -47,6 +47,11 @@ func _main(cmd, root, target, ignores, state string) int {
 			fmt.Printf("dotlink: apply: %v", err)
 			return 1
 		}
+	case "destroy":
+		if err := Destroy(root, target, ignores, state); err != nil {
+			fmt.Printf("dotlink: destroy: %v", err)
+			return 1
+		}
 	default:
 		fmt.Printf("dotlink: unknown command: %s\n", cmd)
 	}
@@ -69,10 +74,13 @@ func Import(root, target, ignores, state string) error {
 	if err != nil {
 		return fmt.Errorf("os.Create: %w", err)
 	}
-	defer f.Close()
 
 	if err := states.SaveTo(f); err != nil {
 		return fmt.Errorf("states.SaveTo: %w", err)
+	}
+
+	if err := f.Close(); err != nil {
+		return fmt.Errorf("f.Close: %w", err)
 	}
 
 	return nil
@@ -88,11 +96,14 @@ func Plan(root, target, ignores, state string) error {
 	if err != nil {
 		return fmt.Errorf("os.Open: %w", err)
 	}
-	defer f.Close()
 
 	states, err := dotlink.LoadState(f)
 	if err != nil {
 		return fmt.Errorf("dotlink.LoadState: %w", err)
+	}
+
+	if err := f.Close(); err != nil {
+		return fmt.Errorf("f.Close: %w", err)
 	}
 
 	diffs, err := dotlink.Plan(states, root, target, ig)
@@ -142,6 +153,28 @@ func Apply(root, target, ignores, state string) error {
 
 	if err := Import(root, target, ignores, state); err != nil {
 		return fmt.Errorf("Import: %w", err)
+	}
+
+	return nil
+}
+
+func Destroy(_, _, _, state string) error {
+	f, err := os.Open(state)
+	if err != nil {
+		return fmt.Errorf("os.Open: %w", err)
+	}
+
+	states, err := dotlink.LoadState(f)
+	if err != nil {
+		return fmt.Errorf("dotlink.LoadState: %w", err)
+	}
+
+	if err := f.Close(); err != nil {
+		return fmt.Errorf("f.Close: %w", err)
+	}
+
+	if err := dotlink.Destroy(states); err != nil {
+		return fmt.Errorf("dotlink.Destroy: %w", err)
 	}
 
 	return nil
