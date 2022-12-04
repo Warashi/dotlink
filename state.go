@@ -108,11 +108,15 @@ func (d StateDiff) Apply() error {
 	o, n := d[0], d[1]
 
 	if o.To != n.To {
-		if err := os.Remove(o.To); err != nil {
-			return fmt.Errorf("os.Remove: %w", err)
+		if o.To != "" {
+			if err := os.Remove(o.To); err != nil {
+				return fmt.Errorf("os.Remove: %w", err)
+			}
 		}
-		if err := os.Symlink(n.From, n.To); err != nil {
-			return fmt.Errorf("os.Symlink: %w", err)
+		if n.To != "" {
+			if err := os.Symlink(n.From, n.To); err != nil {
+				return fmt.Errorf("os.Symlink: %w", err)
+			}
 		}
 
 		return nil
