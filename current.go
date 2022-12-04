@@ -23,7 +23,7 @@ func NewStates(root, target string, ignores PathMatcher) (States, error) {
 		s = append(s, State{
 			From:    path,
 			To:      target,
-			Ignored: ignores.MatchesPath(path),
+			Ignored: ignores.MatchesPath(strings.TrimPrefix(path, root)),
 		})
 
 		return nil
