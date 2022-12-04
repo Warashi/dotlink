@@ -37,6 +37,10 @@ func _main(cmd, root, target, ignores, state string) int {
 			return 1
 		}
 	case "plan":
+		if err := Plan(root, target, ignores, state); err != nil {
+			fmt.Printf("dotlink: import: %v", err)
+			return 1
+		}
 	case "apply":
 	default:
 		fmt.Printf("dotlink: unknown command: %s\n", cmd)
@@ -65,6 +69,30 @@ func Import(root, target, ignores, state string) error {
 	if err := states.SaveTo(f); err != nil {
 		return fmt.Errorf("states.SaveTo: %w", err)
 	}
+
+	return nil
+}
+
+func Plan(root, target, ignores, state string) error {
+	ig, err := dotlink.ParseIgnores(ignores)
+	if err != nil {
+		return fmt.Errorf("dotlink.ParseIgnores: %w", err)
+	}
+
+	f, err := os.Open(state)
+	if err != nil {
+		return fmt.Errorf("os.Open: %w", err)
+	}
+	defer f.Close()
+
+	states, err := dotlink.LoadState(f)
+
+	diffs, err := dotlink.Plan(states, root, target, ig)
+	if err != nil {
+		return fmt.Errorf("dotlink.Import: %w", err)
+	}
+
+	fmt.Println(diffs)
 
 	return nil
 }

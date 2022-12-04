@@ -10,6 +10,7 @@ import (
 	"sort"
 
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/exp/slices"
 )
 
 type (
@@ -92,6 +93,9 @@ func (s States) Diff(o States) (StateDiffs, error) {
 			result = append(result, StateDiff{s, o})
 		}
 	}
+
+	sort.Sort(result)
+	result = slices.Compact(result)
 
 	return result, nil
 }
