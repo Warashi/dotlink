@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
+	"path/filepath"
 	"sort"
 
 	"github.com/google/go-cmp/cmp"
@@ -111,6 +113,9 @@ func (d StateDiff) Less(o StateDiff) bool {
 func (d StateDiff) Apply() error {
 	o, n := d[0], d[1]
 	if o.Ignored && !n.Ignored {
+		if err := os.MkdirAll(filepath.Dir(n.To), fs.ModeDir); err != nil {
+			return fmt.Errorf("os.MkdirAll: %w", err)
+		}
 		if err := os.Symlink(n.From, n.To); err != nil {
 			return fmt.Errorf("os.Symlink: %w", err)
 		}
@@ -118,14 +123,14 @@ func (d StateDiff) Apply() error {
 	}
 	if !o.Ignored && n.Ignored {
 		if err := os.Remove(o.To); err != nil {
-			return fmt.Errorf("os.Remove", err)
+			return fmt.Errorf("os.Remove: %w", err)
 		}
 		return nil
 	}
 
 	if o.To != n.To {
 		if err := os.Remove(o.To); err != nil {
-			return fmt.Errorf("os.Remove", err)
+			return fmt.Errorf("os.Remove: %w", err)
 		}
 		if err := os.Symlink(n.From, n.To); err != nil {
 			return fmt.Errorf("os.Symlink: %w", err)
