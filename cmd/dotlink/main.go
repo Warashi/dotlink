@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/Warashi/dotlink"
 )
@@ -38,10 +39,14 @@ func _main(cmd, root, target, ignores, state string) int {
 		}
 	case "plan":
 		if err := Plan(root, target, ignores, state); err != nil {
-			fmt.Printf("dotlink: import: %v", err)
+			fmt.Printf("dotlink: plan: %v", err)
 			return 1
 		}
 	case "apply":
+		if err := Apply(root, target, ignores, state); err != nil {
+			fmt.Printf("dotlink: apply: %v", err)
+			return 1
+		}
 	default:
 		fmt.Printf("dotlink: unknown command: %s\n", cmd)
 	}
@@ -86,6 +91,9 @@ func Plan(root, target, ignores, state string) error {
 	defer f.Close()
 
 	states, err := dotlink.LoadState(f)
+	if err != nil {
+		return fmt.Errorf("dotlink.LoadState: %w", err)
+	}
 
 	diffs, err := dotlink.Plan(states, root, target, ig)
 	if err != nil {
@@ -93,6 +101,48 @@ func Plan(root, target, ignores, state string) error {
 	}
 
 	fmt.Println(diffs)
+
+	return nil
+}
+
+func Apply(root, target, ignores, state string) error {
+	ig, err := dotlink.ParseIgnores(ignores)
+	if err != nil {
+		return fmt.Errorf("dotlink.ParseIgnores: %w", err)
+	}
+
+	f, err := os.Open(state)
+	if err != nil {
+		return fmt.Errorf("os.Open: %w", err)
+	}
+
+	states, err := dotlink.LoadState(f)
+	if err != nil {
+		return fmt.Errorf("dotlink.LoadState: %w", err)
+	}
+
+	if err := f.Close(); err != nil {
+		return fmt.Errorf("f.Close: %w", err)
+	}
+
+	diffs, err := dotlink.Plan(states, root, target, ig)
+	if err != nil {
+		return fmt.Errorf("dotlink.Import: %w", err)
+	}
+
+	fmt.Println(diffs)
+
+	fmt.Println(strings.Repeat("#", 20))
+	fmt.Println("# applying")
+	fmt.Println(strings.Repeat("#", 20))
+
+	if err := diffs.Apply(); err != nil {
+		return fmt.Errorf("diffs.Apply: %w", err)
+	}
+
+	if err := Import(root, target, ignores, state); err != nil {
+		return fmt.Errorf("Import: %w", err)
+	}
 
 	return nil
 }
