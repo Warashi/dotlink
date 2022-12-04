@@ -20,11 +20,12 @@ func NewStates(root, target string, ignores PathMatcher) (States, error) {
 		}
 
 		target := strings.Replace(path, root, target, 1)
-		s = append(s, State{
-			From:    path,
-			To:      target,
-			Ignored: ignores.MatchesPath(strings.TrimPrefix(path, root)),
-		})
+		if !ignores.MatchesPath(strings.TrimPrefix(path, root)) {
+			s = append(s, State{
+				From: path,
+				To:   target,
+			})
+		}
 
 		return nil
 	})

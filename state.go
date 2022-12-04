@@ -4,9 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/fs"
 	"os"
-	"path/filepath"
 	"sort"
 
 	"github.com/google/go-cmp/cmp"
@@ -16,7 +14,6 @@ import (
 type (
 	State struct {
 		From, To string
-		Ignored  bool
 	}
 	States     []State
 	StateDiff  [2]State
@@ -30,13 +27,6 @@ func (s State) Less(o State) bool {
 
 	if s.To != o.To {
 		return s.To < o.To
-	}
-
-	if s.Ignored != o.Ignored {
-		// ignored が異なる場合には true が優先
-		// l.Ignored == true なら l が優先
-		// l.Ignored == false なら r.Ignored == true なので r が優先
-		return s.Ignored
 	}
 
 	// 全く同じならとりあえず true を返す
@@ -116,21 +106,6 @@ func (d StateDiff) Less(o StateDiff) bool {
 
 func (d StateDiff) Apply() error {
 	o, n := d[0], d[1]
-	if o.Ignored && !n.Ignored {
-		if err := os.MkdirAll(filepath.Dir(n.To), fs.ModeDir); err != nil {
-			return fmt.Errorf("os.MkdirAll: %w", err)
-		}
-		if err := os.Symlink(n.From, n.To); err != nil {
-			return fmt.Errorf("os.Symlink: %w", err)
-		}
-		return nil
-	}
-	if !o.Ignored && n.Ignored {
-		if err := os.Remove(o.To); err != nil {
-			return fmt.Errorf("os.Remove: %w", err)
-		}
-		return nil
-	}
 
 	if o.To != n.To {
 		if err := os.Remove(o.To); err != nil {
