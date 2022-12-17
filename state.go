@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
@@ -122,7 +121,7 @@ func (d StateDiff) Apply() error {
 			}
 		}
 		if n.To != "" {
-			if err := os.MkdirAll(filepath.Dir(n.To), fs.ModeDir); err != nil {
+			if err := os.MkdirAll(filepath.Dir(n.To), 0755); err != nil {
 				return fmt.Errorf("os.MkdirAll: %w", err)
 			}
 			if err := os.Symlink(n.From, n.To); err != nil {
