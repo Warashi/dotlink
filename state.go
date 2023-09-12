@@ -6,10 +6,10 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/exp/slices"
 )
 
 type (
